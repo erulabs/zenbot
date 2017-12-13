@@ -20,7 +20,7 @@ let StripAnsi = require('strip-ansi');
 
 let VERSION = 'Zenbot 4.04 Backtester v0.2';
 
-let PARALLEL_LIMIT = require('os').cpus().length;
+let PARALLEL_LIMIT = require('os').cpus().length * 2;
 
 let TREND_EMA_MIN = 20;
 let TREND_EMA_MAX = 20;
@@ -238,12 +238,12 @@ let strategies = {
     overbought_rsi: range(70, 70)
   }),
   rsi: objectProduct({
-    period: ['2m'],
-    min_periods: [52],
-    rsi_periods: range(10, 30),
-    oversold_rsi: range(20, 35),
-    overbought_rsi: range(82, 82),
-    rsi_recover: range(3, 3),
+    period: ['10m', '20m', '30m'],
+    min_periods: [52, 104],
+    rsi_periods: range(27, 32),
+    oversold_rsi: range(31, 38),
+    overbought_rsi: range(80, 85),
+    rsi_recover: range(2, 4),
     rsi_drop: range(0, 0),
     rsi_divisor: range(2, 2)
   }),
@@ -260,8 +260,8 @@ let strategies = {
     trigger_factor: range(1.0, 2.0, 0.1)
   }),
   trend_ema: objectProduct({
-    period: ['2m'],
-    min_periods: [52],
+    period: ['1h'],
+    min_periods: [52, 200, 1000],
     trend_ema: range(TREND_EMA_MIN, TREND_EMA_MAX),
     neutral_rate: (NEUTRAL_RATE_AUTO ? new Array('auto') : []).concat(range(NEUTRAL_RATE_MIN, NEUTRAL_RATE_MAX).map(r => r / 100)),
     oversold_rsi_periods: range(OVERSOLD_RSI_PERIODS_MIN, OVERSOLD_RSI_PERIODS_MAX),
@@ -277,6 +277,8 @@ let strategyName = 'trend_ema';
 if (args.indexOf('--strategy') !== -1) {
   strategyName = args[args.indexOf('--strategy') + 1];
 }
+
+console.log('')
 
 let tasks = strategies[strategyName].map(strategy => {
   return cb => {
@@ -294,7 +296,7 @@ parallel(tasks, PARALLEL_LIMIT, (err, results) => {
     return !!r
   })
   results.sort((a,b) => (a.roi < b.roi) ? 1 : ((b.roi < a.roi) ? -1 : 0));
-  let fileName = `backtesting_${Math.round(+new Date()/1000)}.csv`;
+  let fileName = `simulations/backtesting_${Math.round(+new Date()/1000)}.csv`;
   let filedsGeneral = ['roi', 'vsBuyHold', 'errorRate', 'wlRatio', 'frequency', 'endBalance', 'buyHold', 'wins', 'losses', 'period', 'min_periods', 'days'];
   let filedNamesGeneral = ['ROI (%)', 'VS Buy Hold (%)', 'Error Rate (%)', 'Win/Loss Ratio', '# Trades/Day', 'Ending Balance ($)', 'Buy Hold ($)', '# Wins', '# Losses', 'Period', 'Min Periods', '# Days'];
   let fields = {
