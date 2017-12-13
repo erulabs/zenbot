@@ -22,8 +22,12 @@ module.exports = function (cb) {
     glob('extensions/**/_codemap.js', {cwd: __dirname, absolute: true}, function (err, results) {
       if (err) return cb(err)
       results.forEach(function (result) {
-        var ext = require(result) //load the _codemap for the extension
-        zenbot.use(ext)           //load the extension into zenbot
+        try {
+          var ext = require(result) //load the _codemap for the extension
+          zenbot.use(ext)           //load the extension into zenbot
+        } catch (err) {
+          console.log('unable to load extension', result)
+        }
       })
       cb(null, zenbot)
     })

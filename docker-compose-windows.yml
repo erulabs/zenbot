@@ -3,16 +3,21 @@ server:
   volumes:
     - ./conf.js:/app/conf.js
     - ./extensions:/app/extensions
+    - ./simulations:/app/simulations
+    - ./models:/app/models
   links:
     - mongodb
-  command: [ "trade", "--paper" ]
+  command: [ "trade", "--paper", "--strategy=neural", "--period=5m", "--neurons_1=500", "--depth=10", "--learns=200" ]
+  # command: [ "trade", "--strategy=trend_ema", "--profit_stop_enable_pct=10", "--profit_stop_pct=4", "--trend_ema=36", "--sell_rate=-0.006" ]
   restart: always
 
 mongodb:
   image: mongo:latest
   volumes_from:
     - mongodb-data
-  command: mongod --smallfiles
+  command: mongod --smallfiles --bind_ip_all
+  ports:
+    - 27017:27017
 
 mongodb-data:
   image: mongo:latest
